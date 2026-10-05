@@ -1,6 +1,7 @@
 import { useState } from "react";
+import type { Bookmark } from "../models/Bookmark";
 
-export default function BottomBar() {
+export default function BottomBar(focusedBookmark: any) {
     const [searchMode, setSearchMode] = useState();
     const [searchQuery, setSearchQuery] = useState();
     const [uri, setUri] = useState();
@@ -23,11 +24,14 @@ export default function BottomBar() {
                 <input id="search-box" placeholder="Search bookmarks... or press tab to add a new entry" wrapMode="char"></input>
             </box>
 
-            <box borderColor="white" flexGrow={1} minHeight={5}alignSelf="stretch">
-                <text>details</text>
-                <text>url: https://example.com</text>
-                <text>description: Example website for testing.</text>
-                <text>tags: example, test</text>
+            <box borderColor="white" flexGrow={1} minHeight={5} alignSelf="stretch">
+                {focusedBookmark.id? (
+                    <>
+                        <text>url: https://example.com</text>
+                        <text>description: Example website for testing.</text>
+                        <text>tags: example, test</text>
+                    </>
+                ) : null}
             </box>
         </box>
     );

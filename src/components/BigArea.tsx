@@ -1,4 +1,3 @@
-import { ASCIIFont } from "@opentui/core";
 import { useState, useEffect } from "react";
 import type { Bookmark } from "../models/Bookmark";
 
