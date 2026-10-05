@@ -1,15 +1,22 @@
 import { useState, useEffect } from "react";
 import type { Bookmark } from "../models/Bookmark";
 
-export default function BigArea({ bookmarks }: { bookmarks?: Bookmark[] }) {
+export default function BigArea({ bookmarks, recents }: { bookmarks?: Bookmark[], recents?: Bookmark[] }) {
 
     const [ bookmarkList, setBookmarkList ] = useState<Bookmark[]>([])
+    const [ recentList, setRecentList ] = useState<Bookmark[]>([])
 
     useEffect(() => {
         if (bookmarks) {
             setBookmarkList(bookmarks);
         }
     }, [bookmarks]);
+
+    useEffect(() => {
+        if (recents) {
+            setRecentList(recents);
+        }
+    }, [recents]);
 
     return (
         <box
@@ -32,7 +39,7 @@ export default function BigArea({ bookmarks }: { bookmarks?: Bookmark[] }) {
             <box borderColor="white" padding={1} flexDirection="column" flexGrow={1} minWidth={20}>
                 <scrollbox padding={1}>
                     <text>recents</text>
-                    {bookmarkList.map((bookmark, index) => (
+                    {recentList.map((bookmark, index) => (
                         <text key={index}>{bookmark.id}</text>
                     ))}
                 </scrollbox>

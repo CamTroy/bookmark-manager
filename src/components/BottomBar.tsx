@@ -33,7 +33,7 @@ export default function BottomBar({ bookmark }: BottomBarProps) {
                         <box flexDirection="row">
                             <text>tags:</text>
                             {bookmark.tags.map((tag: string, index: number) => (
-                                <text key={`${tag}-${index}`}> {tag}</text>
+                                <text key={`${tag}-${index}`}>{tag}</text>
                             ))}
                         </box>
                     </>
