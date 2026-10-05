@@ -11,19 +11,19 @@ export default function BottomBar() {
         <box
             id="bottom-bar-box"
             justifyContent="space-evenly"
-            alignItems="flex-start"
+            alignItems="stretch"
+            alignSelf="stretch"
             flexDirection="column"
             gap={1}
             flexGrow={1}
             paddingY={1}
-            paddingX={2}
-            width='100%'
+            minHeight={10}
         >
-            <box borderColor="white" flexGrow={1} width='100%'>
+            <box borderColor="white" flexGrow={1} minHeight={5} alignSelf="stretch">
                 <input id="search-box" placeholder="Search bookmarks... or press tab to add a new entry" wrapMode="char"></input>
             </box>
 
-            <box borderColor="white" flexGrow={1} width='100%' maxHeight="50%">
+            <box borderColor="white" flexGrow={1} minHeight={5}alignSelf="stretch">
                 <text>details</text>
                 <text>url: https://example.com</text>
                 <text>description: Example website for testing.</text>

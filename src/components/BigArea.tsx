@@ -1,6 +1,16 @@
 import { ASCIIFont } from "@opentui/core";
+import { useState, useEffect } from "react";
+import type { Bookmark } from "../models/Bookmark";
 
-export default function BigArea() {
+export default function BigArea({ bookmarks }: { bookmarks?: Bookmark[] }) {
+
+    const [ bookmarkList, setBookmarkList ] = useState<Bookmark[]>([])
+
+    useEffect(() => {
+        if (bookmarks) {
+            setBookmarkList(bookmarks);
+        }
+    }, [bookmarks]);
 
     return (
         <box
@@ -10,19 +20,22 @@ export default function BigArea() {
             flexDirection="row"
             flexGrow={1}
             gap={1}
-            maxHeight="60%"
+            maxWidth={90}
         >
-            <box borderColor="white" padding={1}  flexDirection="column" flexGrow={1} width='48%'>
+            <box borderColor="white" padding={1} flexDirection="column" flexGrow={1} minWidth={20}>
                 <scrollbox padding={1}>
                     <text>welcome to your bookmark manager!</text>
+                        {bookmarkList.map((bookmark, index) => (
+                        <text key={index}>{bookmark.id}</text>
+                    ))}
                 </scrollbox>
             </box>
-            <box borderColor="white" padding={1} flexDirection="column" flexGrow={1} width='48%'>
+            <box borderColor="white" padding={1} flexDirection="column" flexGrow={1} minWidth={20}>
                 <scrollbox padding={1}>
                     <text>recents</text>
-                    <text>recent bookmark 1</text>
-                    <text>recent bookmark 2</text>
-                    <text>recent bookmark 3</text>
+                    {bookmarkList.map((bookmark, index) => (
+                        <text key={index}>{bookmark.id}</text>
+                    ))}
                 </scrollbox>
             </box>
         </box>

@@ -5,9 +5,8 @@ import BottomBar from "./components/BottomBar";
 import BigArea from "./components/BigArea";
 
 function App() {
-
   return (
-    <box justifyContent="center" alignItems="center" alignSelf="center" flexDirection="column" flexGrow={1} maxHeight="100%" width={100}>
+    <box justifyContent="center" alignItems="center" alignSelf="center" flexDirection="column" flexGrow={1} minWidth={40} minHeight={20} maxHeight={40}>
       <ascii-font id="title" text="bookmark manager" font="shade" />
       <BigArea />
       <BottomBar />
