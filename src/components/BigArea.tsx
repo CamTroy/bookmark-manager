@@ -24,7 +24,7 @@ export default function BigArea({ bookmarks }: { bookmarks?: Bookmark[] }) {
             <box borderColor="white" padding={1} flexDirection="column" flexGrow={1} minWidth={20}>
                 <scrollbox padding={1}>
                     <text>welcome to your bookmark manager!</text>
-                        {bookmarkList.map((bookmark, index) => (
+                        {bookmarkList.map((bookmark: Bookmark, index: number) => (
                         <text key={index}>{bookmark.id}</text>
                     ))}
                 </scrollbox>

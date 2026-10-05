@@ -1,12 +1,13 @@
 import { useState } from "react";
 import type { Bookmark } from "../models/Bookmark";
 
-export default function BottomBar(focusedBookmark: any) {
+interface BottomBarProps {
+    bookmark: Bookmark | null;
+}
+
+export default function BottomBar({ bookmark }: BottomBarProps) {
     const [searchMode, setSearchMode] = useState();
     const [searchQuery, setSearchQuery] = useState();
-    const [uri, setUri] = useState();
-    const [description, setDescription] = useState();
-    const [tags, setTags] = useState();
 
     return (
         <box
@@ -16,20 +17,25 @@ export default function BottomBar(focusedBookmark: any) {
             alignSelf="stretch"
             flexDirection="column"
             gap={1}
-            flexGrow={1}
             paddingY={1}
+            flexGrow={1}
             minHeight={10}
         >
             <box borderColor="white" flexGrow={1} minHeight={5} alignSelf="stretch">
-                <input id="search-box" placeholder="Search bookmarks... or press tab to add a new entry" wrapMode="char"></input>
+                <input id="search-box" placeholder="Search bookmarks... or press tab to add a new entry" wrapMode="char" />
             </box>
 
             <box borderColor="white" flexGrow={1} minHeight={5} alignSelf="stretch">
-                {focusedBookmark.id? (
+                {bookmark?.id ? (
                     <>
-                        <text>url: https://example.com</text>
-                        <text>description: Example website for testing.</text>
-                        <text>tags: example, test</text>
+                        <text>url: {bookmark.uri}</text>
+                        <text>description: {bookmark.description}</text>
+                        <box flexDirection="row">
+                            <text>tags:</text>
+                            {bookmark.tags.map((tag: string, index: number) => (
+                                <text key={`${tag}-${index}`}> {tag}</text>
+                            ))}
+                        </box>
                     </>
                 ) : null}
             </box>
