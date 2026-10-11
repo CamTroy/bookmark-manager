@@ -15,6 +15,7 @@
   "dependencies": {
     "@opentui/core": "^0.5.12",
     "@opentui/react": "^0.5.12",
+    "cheerio": "^1.2.0",
     "react": "^19.2.8"
   },
   "engines": {
