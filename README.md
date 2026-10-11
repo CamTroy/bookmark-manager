@@ -1,4 +1,4 @@
-# react
+# Bookmark Manager
 
 Requires [Bun](https://bun.sh/) 1.3.0 or later.
 
@@ -20,4 +20,4 @@ To typecheck:
 bun run typecheck
 ```
 
-This project was created using `bun create tui`. [create-tui](https://github.com/msmps/create-tui) is the easiest way to get started with OpenTUI.
+This project is supposed to make keeping bookmarks simple and browser-agnostic, easy to make new bookmarks and open them in a default browser or copy the url and paste it where you want.
