@@ -1,5 +1,4 @@
 import { readFileSync, writeFileSync } from 'fs';
-import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { Bookmark } from './models/Bookmark';

@@ -1,22 +1,35 @@
 import { useState, useEffect } from "react";
 import type { Bookmark } from "../models/Bookmark";
+import { getBookmarks } from "../filesync";
+import stringWidth from "string-width";
 
-export default function BigArea({ bookmarks, recents }: { bookmarks?: Bookmark[], recents?: Bookmark[] }) {
+export default function BigArea() {
 
-    const [ bookmarkList, setBookmarkList ] = useState<Bookmark[]>([])
-    const [ recentList, setRecentList ] = useState<Bookmark[]>([])
-
-    useEffect(() => {
-        if (bookmarks) {
-            setBookmarkList(bookmarks);
-        }
-    }, [bookmarks]);
+    const [bookmarkList, setBookmarkList] = useState<Bookmark[]>([])
+    const [recentList, setRecentList] = useState<Bookmark[]>([])
 
     useEffect(() => {
-        if (recents) {
-            setRecentList(recents);
+        setBookmarkList(getBookmarks());
+    }, []);
+
+    // useEffect(() => {
+    //     if (recents) {
+    //         setRecentList(recents);
+    //     }
+    // }, [recents]);
+
+    const sanitizeNonLatin = (text: string): string =>
+        Array.from(text.normalize("NFC"), (char) =>
+            /\p{Script=Latin}/u.test(char) || /^[\x00-\x7F]$/.test(char) ? char : "?"
+        ).join("");
+
+    const truncateName = (name: string, maxWidth: number): string => {
+        const sanitizedName = sanitizeNonLatin(name);
+        if (stringWidth(sanitizedName) <= maxWidth) {
+            return sanitizedName;
         }
-    }, [recents]);
+        return sanitizedName.slice(0, maxWidth - 3) + "...";
+    };
 
     return (
         <box
@@ -26,21 +39,21 @@ export default function BigArea({ bookmarks, recents }: { bookmarks?: Bookmark[]
             flexDirection="row"
             flexGrow={1}
             gap={1}
-            maxWidth={90}
+            maxWidth="100%"
         >
-            <box borderColor="white" padding={1} flexDirection="column" flexGrow={1} minWidth={20}>
+            <box borderColor="white" padding={1} flexDirection="column" flexGrow={1}>
                 <scrollbox padding={1}>
                     <text>welcome to your bookmark manager!</text>
-                        {bookmarkList.map((bookmark: Bookmark, index: number) => (
-                        <text key={index}>{bookmark.id}</text>
+                    {bookmarkList.map((bookmark: Bookmark, index: number) => (
+                        <text key={index}>{truncateName(bookmark.name, 40)}</text>
                     ))}
                 </scrollbox>
             </box>
-            <box borderColor="white" padding={1} flexDirection="column" flexGrow={1} minWidth={20}>
+            <box borderColor="white" padding={1} flexDirection="column" flexGrow={1}>
                 <scrollbox padding={1}>
                     <text>recents</text>
                     {recentList.map((bookmark, index) => (
-                        <text key={index}>{bookmark.id}</text>
+                        <text key={index}>{truncateName(bookmark.name, 40)}</text>
                     ))}
                 </scrollbox>
             </box>
