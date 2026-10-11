@@ -7,6 +7,7 @@ import { load } from "cheerio";
 
 interface BottomBarProps {
     bookmark: Bookmark | null;
+    onBookmarkAdded: (bookmark: Bookmark) => void;
 }
 
 function fetchWebsiteTitle(url: string): Promise<string> {
@@ -23,7 +24,7 @@ function fetchWebsiteTitle(url: string): Promise<string> {
         });
 }
 
-export default function BottomBar({ bookmark }: BottomBarProps) {
+export default function BottomBar({ bookmark, onBookmarkAdded }: BottomBarProps) {
     const [searchMode, setSearchMode] = useState("SEARCH");
     const [searchQuery, setSearchQuery] = useState("");
     const [newUri, setNewUri] = useState("");
@@ -69,7 +70,8 @@ export default function BottomBar({ bookmark }: BottomBarProps) {
                     description: null
                 };
 
-                return addBookmark(newBookmark);
+                addBookmark(newBookmark);
+                onBookmarkAdded(newBookmark);
             })
             .catch(error => {
                 logger(`Could not fetch title or add bookmark: ${String(error)}`);

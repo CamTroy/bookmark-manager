@@ -14,21 +14,18 @@ mkdirSync(join(homedir(), ".bmanager"), { recursive: true });
 
 function App() {
 
-  const dummyBookmark: Bookmark = {
-    id: "1",
-    name: "bruh",
-    uri: "butt.com",
-    tags: ["hmm", "hmm"],
-    description: "Bruhhhhhhhhhhhhh"
-  }
-
   const [focusedBookmark, setFocusedBookmark] = useState<Bookmark | null>(null);
+  const [bookmarkList, setBookmarkList] = useState<Bookmark[]>(getBookmarks());
+
+  const handleBookmarkAdded = (bookmark: Bookmark) => {
+    setBookmarkList(current => [...current, bookmark]);
+};
 
   return (
     <box justifyContent="center" alignItems="center" alignSelf="center" flexDirection="column" flexGrow={1} minWidth={40} minHeight={20} maxHeight={40}>
       {/* <ascii-font id="title" text="bookmark manager" font="shade" /> */}
-      <BigArea />
-      <BottomBar bookmark={focusedBookmark} />
+      <BigArea bookmarkList={bookmarkList} />
+      <BottomBar bookmark={focusedBookmark} onBookmarkAdded={handleBookmarkAdded} />
       {/* Debug code */}
       {/* <text id="test-debug">current focusedBookmark: {focusedBookmark?.id || 'null'}</text> */}
     </box>

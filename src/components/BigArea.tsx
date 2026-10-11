@@ -3,20 +3,9 @@ import type { Bookmark } from "../models/Bookmark";
 import { getBookmarks } from "../filesync";
 import stringWidth from "string-width";
 
-export default function BigArea() {
+export default function BigArea({ bookmarkList }: { bookmarkList: Bookmark[] }) {
 
-    const [bookmarkList, setBookmarkList] = useState<Bookmark[]>([])
     const [recentList, setRecentList] = useState<Bookmark[]>([])
-
-    useEffect(() => {
-        setBookmarkList(getBookmarks());
-    }, []);
-
-    // useEffect(() => {
-    //     if (recents) {
-    //         setRecentList(recents);
-    //     }
-    // }, [recents]);
 
     const sanitizeNonLatin = (text: string): string =>
         Array.from(text.normalize("NFC"), (char) =>
