@@ -5,6 +5,12 @@ import BottomBar from "./components/BottomBar";
 import BigArea from "./components/BigArea";
 import { useState } from "react";
 import type { Bookmark } from "./models/Bookmark";
+import { mkdirSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { getBookmarks } from "./filesync";
+
+mkdirSync(join(homedir(), ".bmanager"), { recursive: true });
 
 function App() {
 

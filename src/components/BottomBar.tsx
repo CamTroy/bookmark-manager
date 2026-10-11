@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Bookmark } from "../models/Bookmark";
+import { addBookmark, deleteBookmark as deleteBookmarkFromFile, getBookmarks } from "../filesync";
+import type { KeyEvent } from "@opentui/core";
+import { logger } from "../debug/logger";
 
 interface BottomBarProps {
     bookmark: Bookmark | null;
@@ -8,6 +11,35 @@ interface BottomBarProps {
 export default function BottomBar({ bookmark }: BottomBarProps) {
     const [searchMode, setSearchMode] = useState("SEARCH");
     const [searchQuery, setSearchQuery] = useState("");
+    const [newUri, setNewUri] = useState("");
+
+    // useEffect(() => {
+
+    // }, [searchQuery]);
+
+    const handleKeyPress = (event: KeyEvent): void => {
+        logger(`Key pressed: ${event.name}`);
+
+        if (event.name !== "tab") return;
+
+        event.preventDefault();
+
+        if (searchMode === "SEARCH") {
+            setSearchMode("ADD");
+        } else {
+            setSearchMode("SEARCH");
+        }
+    };
+
+    const handleQueryChange = (value: string): void => {
+        logger(`Search query changed: ${value}`);
+        setSearchQuery(value);
+    }
+
+    const handleNewUriChange = (value: string): void => {
+        logger(`New URI changed: ${value}`);
+        setNewUri(value);
+    }
 
     return (
         <box
@@ -22,10 +54,16 @@ export default function BottomBar({ bookmark }: BottomBarProps) {
             minHeight={10}
         >
             <box borderColor="white" flexGrow={1} minHeight={5} alignSelf="stretch">
-                <input id="search-box" placeholder="Search bookmarks... or press tab to add a new entry" wrapMode="char" />
+                {
+                    searchMode === "SEARCH" ? (
+                        <input id="search-box" placeholder={searchMode === "SEARCH" ? "Search bookmarks..." : "Enter bookmark url..."} wrapMode="char" onKeyDown={handleKeyPress} value={searchQuery} onInput={handleQueryChange} />
+                    ) : (
+                        <input id="search-box" placeholder={searchMode === "SEARCH" ? "Search bookmarks..." : "Enter bookmark url..."} wrapMode="char" onKeyDown={handleKeyPress} value={newUri} onInput={handleNewUriChange} />
+                    )
+                }
             </box>
 
-            <box borderColor="white" flexGrow={1} minHeight={5} alignSelf="stretch">
+            {/* <box borderColor="white" flexGrow={1} minHeight={5} alignSelf="stretch">
                 {bookmark?.id ? (
                     <>
                         <text>url: {bookmark.uri}</text>
@@ -38,19 +76,7 @@ export default function BottomBar({ bookmark }: BottomBarProps) {
                         </box>
                     </>
                 ) : null}
-            </box>
+            </box> */}
         </box>
     );
-}
-
-const writeBookmark = () => {
-
-}
-
-const readBookmarks = () => {
-
-}
-
-const deleteBookmark = () => {
-
 }
