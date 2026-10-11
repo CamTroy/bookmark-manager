@@ -3,9 +3,24 @@ import type { Bookmark } from "../models/Bookmark";
 import { addBookmark, deleteBookmark as deleteBookmarkFromFile, getBookmarks } from "../filesync";
 import type { KeyEvent } from "@opentui/core";
 import { logger } from "../debug/logger";
+import { load } from "cheerio";
 
 interface BottomBarProps {
     bookmark: Bookmark | null;
+}
+
+function fetchWebsiteTitle(url: string): Promise<string> {
+    return fetch(url)
+        .then(response => response.text())
+        .then(html => {
+            const $ = load(html);
+            const title = $("title").text();
+            return title || "No title found";
+        })
+        .catch(error => {
+            console.error("Error fetching website title:", error);
+            return "Error fetching title";
+        });
 }
 
 export default function BottomBar({ bookmark }: BottomBarProps) {
@@ -17,7 +32,7 @@ export default function BottomBar({ bookmark }: BottomBarProps) {
 
     // }, [searchQuery]);
 
-    const handleKeyPress = (event: KeyEvent): void => {
+    const handleKeyPressSearch = (event: KeyEvent): void => {
         logger(`Key pressed: ${event.name}`);
 
         if (event.name !== "tab") return;
@@ -29,6 +44,39 @@ export default function BottomBar({ bookmark }: BottomBarProps) {
         } else {
             setSearchMode("SEARCH");
         }
+    };
+
+    const handleKeyPressAdd = (event: KeyEvent): void => {
+        handleKeyPressSearch(event);
+
+        if (event.name !== "return") return;
+        if (searchMode !== "ADD") return;
+
+        event.preventDefault();
+
+        if (newUri.trim() === "") {
+            logger("New URI is empty. Not adding bookmark.");
+            return;
+        }
+
+        fetchWebsiteTitle(newUri)
+            .then(title => {
+                const newBookmark: Bookmark = {
+                    id: Date.now().toString(),
+                    name: title,
+                    uri: newUri,
+                    tags: null,
+                    description: null
+                };
+
+                return addBookmark(newBookmark);
+            })
+            .catch(error => {
+                logger(`Could not fetch title or add bookmark: ${String(error)}`);
+            });
+
+        setNewUri("");
+        setSearchMode("SEARCH");
     };
 
     const handleQueryChange = (value: string): void => {
@@ -56,9 +104,9 @@ export default function BottomBar({ bookmark }: BottomBarProps) {
             <box borderColor="white" flexGrow={1} minHeight={5} alignSelf="stretch">
                 {
                     searchMode === "SEARCH" ? (
-                        <input id="search-box" placeholder={searchMode === "SEARCH" ? "Search bookmarks..." : "Enter bookmark url..."} wrapMode="char" onKeyDown={handleKeyPress} value={searchQuery} onInput={handleQueryChange} />
+                        <input id="search-box" placeholder={searchMode === "SEARCH" ? "Search bookmarks..." : "Enter bookmark url..."} wrapMode="char" onKeyDown={handleKeyPressSearch} value={searchQuery} onInput={handleQueryChange} flexGrow={1} />
                     ) : (
-                        <input id="search-box" placeholder={searchMode === "SEARCH" ? "Search bookmarks..." : "Enter bookmark url..."} wrapMode="char" onKeyDown={handleKeyPress} value={newUri} onInput={handleNewUriChange} />
+                        <input id="search-box" placeholder={searchMode === "SEARCH" ? "Search bookmarks..." : "Enter bookmark url..."} wrapMode="char" onKeyDown={handleKeyPressAdd} value={newUri} onInput={handleNewUriChange} flexGrow={1} />
                     )
                 }
             </box>
