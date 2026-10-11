@@ -21,3 +21,6 @@ bun run typecheck
 ```
 
 This project is supposed to make keeping bookmarks simple and browser-agnostic, easy to make new bookmarks and open them in a default browser or copy the url and paste it where you want.
+
+### DISCLAIMER
+This project is still a work-in-progress and major design changes may happen at any time, not all functionality is implemented yet.
