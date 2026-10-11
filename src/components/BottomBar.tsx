@@ -6,8 +6,8 @@ interface BottomBarProps {
 }
 
 export default function BottomBar({ bookmark }: BottomBarProps) {
-    const [searchMode, setSearchMode] = useState();
-    const [searchQuery, setSearchQuery] = useState();
+    const [searchMode, setSearchMode] = useState("SEARCH");
+    const [searchQuery, setSearchQuery] = useState("");
 
     return (
         <box
@@ -41,4 +41,16 @@ export default function BottomBar({ bookmark }: BottomBarProps) {
             </box>
         </box>
     );
+}
+
+const writeBookmark = () => {
+
+}
+
+const readBookmarks = () => {
+
+}
+
+const deleteBookmark = () => {
+
 }
