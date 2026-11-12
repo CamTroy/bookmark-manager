@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import type { Bookmark } from "../models/Bookmark";
-import { getBookmarks } from "../filesync";
 import stringWidth from "string-width";
 import { logger } from "../debug/logger";
 import { exec } from "node:child_process";
 import { useKeyboard } from "@opentui/react";
 import { activeView } from "..";
 
-const categoryType = {
+const CategoryType = {
   SEARCHED: "SEARCHED",
   RECENTS: "RECENTS",
   NONE: "NONE",
@@ -17,34 +16,81 @@ interface BigAreaProps {
   isFocused: boolean;
   bookmarkList: Bookmark[];
   onSwitchToBottomBar: (newView: any) => void;
+  clipboardService: any;
+  deleteBookmark: (bookmark: Bookmark) => void;
+}
+
+interface CategoryState {
+  name: (typeof CategoryType)[keyof typeof CategoryType];
+  list: any[];
 }
 
 export default function BigArea({
   isFocused,
   bookmarkList,
-  onSwitchToBottomBar
+  onSwitchToBottomBar,
+  clipboardService,
+  deleteBookmark
 }: BigAreaProps) {
+  const [recentList, setRecentList] = useState<Bookmark[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [selectedCategory, setSelectedCategory] = useState(CategoryType.NONE);
+  const [categoryState, setCategoryState] = useState<CategoryState>({
+    name: CategoryType.NONE,
+    list: [],
+  });
+
   useEffect(() => {
     if (!isFocused) {
       handleSwitchAwayFromBigArea();
       return;
     }
+    if (selectedCategory === CategoryType.NONE && isFocused) {
+      handleSwitchToBigArea();
+    }
+  }, [isFocused, selectedCategory]);
 
-    handleSwitchToBigArea();
-  }), [isFocused]
-  
   useKeyboard((key) => {
     if (!isFocused) return;
 
-    if (key.name == 'tab') {
-      key.preventDefault();
-      onSwitchToBottomBar(activeView.BOTTOM_BAR);
+    switch (key.name) {
+      case "tab":
+        key.preventDefault();
+        onSwitchToBottomBar(activeView.BOTTOM_BAR);
+        break;
+      case "return":
+        key.preventDefault();
+        openBrowser(categoryState.list[selectedIndex]);
+        break;
+      case "space":
+        key.preventDefault();
+        copyLink(categoryState.list[selectedIndex]);
+        break;
+      case "delete":
+        key.preventDefault();
+        deleteBookmark(categoryState.list[selectedIndex])
+        break;
+      case "left":
+        key.preventDefault();
+        handleChangeCategory(CategoryType.SEARCHED);
+        break;
+      case "right":
+        key.preventDefault();
+        handleChangeCategory(CategoryType.RECENTS);
+        break;
+      case "up":
+        key.preventDefault();
+        handleChangeIndex(selectedIndex - 1, categoryState.list);
+        break;
+      case "down":
+        key.preventDefault();
+        handleChangeIndex(selectedIndex + 1, categoryState.list);
+        break;
+      default:
+        return;
     }
-  })
-  
-  const [recentList, setRecentList] = useState<Bookmark[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [selectedCategory, setSelectedCategory] = useState(categoryType.NONE);
+  });
+
   const sanitizeNonLatin = (text: string): string =>
     Array.from(text.normalize("NFC"), (char) =>
       /\p{Script=Latin}/u.test(char) || /^[\x00-\x7F]$/.test(char) ? char : "?",
@@ -58,8 +104,9 @@ export default function BigArea({
     return sanitizedName.slice(0, maxWidth - 3) + "...";
   };
 
-  const openBrowser = (uri: string): void => {
+  const openBrowser = (bookmark: Bookmark): void => {
     const platform = process.platform;
+    const uri = bookmark.uri;
     let command = "";
     if (platform === "win32") {
       command = `start "" "${uri}"`;
@@ -73,12 +120,26 @@ export default function BigArea({
         logger(`Failed to open browser: ${error.message}`);
       }
     });
+    addToRecents(bookmark);
+  };
+
+  const copyLink = async (bookmark: Bookmark): Promise<void> => {
+    const uri = bookmark.uri
+    try {
+      await clipboardService.writeText(uri, {
+        destination: "best-available",
+      });
+      logger(`${uri} copied to clipboard!`);
+      addToRecents(bookmark)
+    } catch (e) {
+      logger(`Failed to copy link using OpenTUI service: ${e}`);
+    }
   };
 
   const handleClick = (event: any, bookmark: Bookmark): void => {
     const uri = bookmark.uri;
     logger(`link clicked: ${uri}`);
-    openBrowser(uri);
+    openBrowser(bookmark);
     addToRecents(bookmark);
   };
 
@@ -96,28 +157,37 @@ export default function BigArea({
   };
 
   const handleSwitchToBigArea = (): void => {
-    handleChangeCategory(categoryType.SEARCHED);
+    handleChangeCategory(CategoryType.SEARCHED);
   };
 
   const handleSwitchAwayFromBigArea = (): void => {
-    setSelectedCategory(categoryType.NONE);
+    setSelectedCategory(CategoryType.NONE);
     setSelectedIndex(-1);
-  }
+  };
 
-  const handleChangeIndex = (
-    currentIndex: number,
-    newIndex: number,
-    array: any[],
-  ): void => {
+  const handleChangeIndex = (newIndex: number, array: any[]): void => {
     if (newIndex < 0) return;
     if (newIndex > array.length - 1) return;
+
+    setSelectedIndex(newIndex);
   };
 
   const handleChangeCategory = (newCategory: any): void => {
-    if (newCategory == categoryType.RECENTS && recentList.length < 1) return;
-    if (newCategory == categoryType.SEARCHED && bookmarkList.length < 1) return;
+    if (newCategory == CategoryType.RECENTS && recentList.length < 1) return;
+    if (newCategory == CategoryType.SEARCHED && bookmarkList.length < 1) return;
 
     setSelectedCategory(newCategory);
+    if (newCategory == CategoryType.RECENTS) {
+      setCategoryState({
+        name: CategoryType.RECENTS,
+        list: recentList,
+      });
+    } else if (newCategory == CategoryType.SEARCHED) {
+      setCategoryState({
+        name: CategoryType.SEARCHED,
+        list: bookmarkList,
+      });
+    }
     setSelectedIndex(0);
   };
 
@@ -139,7 +209,8 @@ export default function BigArea({
           </text>
           {bookmarkList.map((bookmark: Bookmark, index: number) => (
             <text key={bookmark.id} onMouseUp={(e) => handleClick(e, bookmark)}>
-              {index == selectedIndex && selectedCategory == categoryType.SEARCHED ? (
+              {index == selectedIndex &&
+              selectedCategory == CategoryType.SEARCHED ? (
                 <u>
                   <a href={bookmark.uri}>{truncateName(bookmark.name, 40)}</a>
                 </u>
@@ -158,7 +229,8 @@ export default function BigArea({
           </text>
           {recentList.map((bookmark: Bookmark, index: number) => (
             <text key={bookmark.id} onMouseUp={(e) => handleClick(e, bookmark)}>
-              {index == selectedIndex && selectedCategory == categoryType.RECENTS ? (
+              {index == selectedIndex &&
+              selectedCategory == CategoryType.RECENTS ? (
                 <u>
                   <a href={bookmark.uri}>{truncateName(bookmark.name, 40)}</a>
                 </u>

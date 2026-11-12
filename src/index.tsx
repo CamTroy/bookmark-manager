@@ -1,4 +1,6 @@
-import { createCliRenderer, TextAttributes } from "@opentui/core";
+import { createCliRenderer, TextAttributes,  createClipboard,
+createHostClipboard,
+createRendererClipboardAdapter } from "@opentui/core";
 import { createRoot } from "@opentui/react";
 import "@opentui/react/runtime-plugin-support";
 import BottomBar from "./components/BottomBar";
@@ -8,7 +10,7 @@ import type { Bookmark } from "./models/Bookmark";
 import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { getBookmarks } from "./filesync";
+import { getBookmarks, deleteBookmark } from "./filesync";
 import { logger } from "./debug/logger";
 
 mkdirSync(join(homedir(), ".bmanager"), { recursive: true });
@@ -33,10 +35,25 @@ function App() {
     logger(`Focused view: ${newView}`)
   }
 
+  const clipboard = createClipboard({
+    host: createHostClipboard(),
+    terminal: createRendererClipboardAdapter(renderer),
+  });
+
+  const handleDeleteBookmark = (bookmark: Bookmark) => {
+    try {
+      deleteBookmark(bookmark);
+      setBookmarkList(getBookmarks());
+      logger(`${bookmark.name} with ${bookmark.uri} has successfully been deleted!`);
+    } catch (e) {
+      logger(`deleting bookmark failed with error ${e}`);
+    }
+  }
+
   return (
     <box justifyContent="center" alignItems="center" alignSelf="center" flexDirection="column" flexGrow={1} minWidth={40} minHeight={20} maxHeight={40}>
       {/* <ascii-font id="title" text="bookmark manager" font="shade" /> */}
-      <BigArea isFocused={focusedView === activeView.BIG_AREA} bookmarkList={bookmarkList} onSwitchToBottomBar={handleSwitchViews} />
+      <BigArea isFocused={focusedView === activeView.BIG_AREA} bookmarkList={bookmarkList} onSwitchToBottomBar={handleSwitchViews} clipboardService={clipboard} deleteBookmark={handleDeleteBookmark} />
       <BottomBar isFocused={focusedView == activeView.BOTTOM_BAR} bookmark={focusedBookmark} onBookmarkAdded={handleBookmarkAdded} onSwitchToBigArea={handleSwitchViews} />
       {/* Debug code */}
       {/* <text id="test-debug">current focusedBookmark: {focusedBookmark?.id || 'null'}</text> */}

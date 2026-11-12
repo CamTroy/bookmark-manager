@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import type { Bookmark } from "../models/Bookmark";
 import {
   addBookmark,
-  deleteBookmark as deleteBookmarkFromFile,
-  getBookmarks,
 } from "../filesync";
 import type { KeyEvent } from "@opentui/core";
 import { logger } from "../debug/logger";
@@ -46,7 +44,10 @@ export default function BottomBar({
 
   // Prevent arrow keys and other important keys from doing normal behavior so they can be used in other parts of the app
   const handleNavKeyPress = (event: KeyEvent): void => {
-    event.preventDefault();
+    if (!isFocused) {
+      event.preventDefault();
+      return;
+    }
 
     if (event.name === "up" && isFocused) {
       onSwitchToBigArea(activeView.BIG_AREA);
@@ -130,37 +131,39 @@ export default function BottomBar({
       minHeight={10}
     >
       <box borderColor="white" flexGrow={1} minHeight={5} alignSelf="stretch">
-        {searchMode === "SEARCH" ? (
-          <input
-            focused={isFocused}
-            id="search-box"
-            placeholder={
-              searchMode === "SEARCH"
-                ? "Search bookmarks..."
-                : "Enter bookmark url..."
-            }
-            wrapMode="char"
-            onKeyDown={handleKeyPressSearch}
-            value={searchQuery}
-            onInput={handleQueryChange}
-            flexGrow={1}
-          />
-        ) : (
-          <input
-            focused={isFocused}
-            id="search-box"
-            placeholder={
-              searchMode === "SEARCH"
-                ? "Search bookmarks..."
-                : "Enter bookmark url..."
-            }
-            wrapMode="char"
-            onKeyDown={handleKeyPressAdd}
-            value={newUri}
-            onInput={handleNewUriChange}
-            flexGrow={1}
-          />
-        )}
+        {isFocused ? (
+          searchMode === "SEARCH" ? (
+            <input
+              focused={isFocused}
+              id="search-box"
+              placeholder={
+                searchMode === "SEARCH"
+                  ? "Search bookmarks..."
+                  : "Enter bookmark url..."
+              }
+              wrapMode="char"
+              onKeyDown={handleKeyPressSearch}
+              value={searchQuery}
+              onInput={handleQueryChange}
+              flexGrow={1}
+            />
+          ) : (
+            <input
+              focused={isFocused}
+              id="search-box"
+              placeholder={
+                searchMode === "SEARCH"
+                  ? "Search bookmarks..."
+                  : "Enter bookmark url..."
+              }
+              wrapMode="char"
+              onKeyDown={handleKeyPressAdd}
+              value={newUri}
+              onInput={handleNewUriChange}
+              flexGrow={1}
+            />
+          )
+        ) : null}
       </box>
 
       {/* <box borderColor="white" flexGrow={1} minHeight={5} alignSelf="stretch">
