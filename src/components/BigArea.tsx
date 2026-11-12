@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import type { Bookmark } from "../models/Bookmark";
 import stringWidth from "string-width";
-import { logger } from "../debug/logger";
+import { log } from "../debug/logger";
 import { exec } from "node:child_process";
 import { useKeyboard } from "@opentui/react";
 import { activeView } from "..";
@@ -15,6 +15,7 @@ const CategoryType = {
 interface BigAreaProps {
   isFocused: boolean;
   bookmarkList: Bookmark[];
+  searchList: Bookmark[];
   onSwitchToBottomBar: (newView: any) => void;
   clipboardService: any;
   deleteBookmark: (bookmark: Bookmark) => void;
@@ -28,6 +29,7 @@ interface CategoryState {
 export default function BigArea({
   isFocused,
   bookmarkList,
+  searchList,
   onSwitchToBottomBar,
   clipboardService,
   deleteBookmark
@@ -117,7 +119,7 @@ export default function BigArea({
     }
     exec(command, (error) => {
       if (error) {
-        logger(`Failed to open browser: ${error.message}`);
+        log(`Failed to open browser: ${error.message}`);
       }
     });
     addToRecents(bookmark);
@@ -129,16 +131,16 @@ export default function BigArea({
       await clipboardService.writeText(uri, {
         destination: "best-available",
       });
-      logger(`${uri} copied to clipboard!`);
+      log(`${uri} copied to clipboard!`);
       addToRecents(bookmark)
     } catch (e) {
-      logger(`Failed to copy link using OpenTUI service: ${e}`);
+      log(`Failed to copy link using OpenTUI service: ${e}`);
     }
   };
 
   const handleClick = (event: any, bookmark: Bookmark): void => {
     const uri = bookmark.uri;
-    logger(`link clicked: ${uri}`);
+    log(`link clicked: ${uri}`);
     openBrowser(bookmark);
     addToRecents(bookmark);
   };
@@ -153,7 +155,7 @@ export default function BigArea({
       return newArray;
     });
 
-    logger(`recents: ${recentList.map((b) => b.name).join(", ")}`);
+    log(`recents: ${recentList.map((b) => b.name).join(", ")}`);
   };
 
   const handleSwitchToBigArea = (): void => {
@@ -185,7 +187,7 @@ export default function BigArea({
     } else if (newCategory == CategoryType.SEARCHED) {
       setCategoryState({
         name: CategoryType.SEARCHED,
-        list: bookmarkList,
+        list: searchList,
       });
     }
     setSelectedIndex(0);
@@ -207,7 +209,7 @@ export default function BigArea({
             welcome to your bookmark manager!
             <br />
           </text>
-          {bookmarkList.map((bookmark: Bookmark, index: number) => (
+          {searchList.map((bookmark: Bookmark, index: number) => (
             <text key={bookmark.id} onMouseUp={(e) => handleClick(e, bookmark)}>
               {index == selectedIndex &&
               selectedCategory == CategoryType.SEARCHED ? (

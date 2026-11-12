@@ -4,7 +4,7 @@ import {
   addBookmark,
 } from "../filesync";
 import type { KeyEvent } from "@opentui/core";
-import { logger } from "../debug/logger";
+import { log } from "../debug/logger";
 import { load } from "cheerio";
 import { activeView } from "..";
 
@@ -13,6 +13,7 @@ interface BottomBarProps {
   bookmark: Bookmark | null;
   onBookmarkAdded: (bookmark: Bookmark) => void;
   onSwitchToBigArea: (newView: any) => void;
+  onQueryChange: (newQuery: string) => void;
 }
 
 function fetchWebsiteTitle(url: string): Promise<string> {
@@ -34,6 +35,7 @@ export default function BottomBar({
   bookmark,
   onBookmarkAdded,
   onSwitchToBigArea,
+  onQueryChange
 }: BottomBarProps) {
   const [searchMode, setSearchMode] = useState("SEARCH");
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,7 +57,7 @@ export default function BottomBar({
   };
 
   const handleKeyPressSearch = (event: KeyEvent): void => {
-    logger(`Key pressed: ${event.name}`);
+    log(`Key pressed: ${event.name}`);
 
     if (navKeys.includes(event.name)) handleNavKeyPress(event);
     if (event.name !== "tab") return;
@@ -79,7 +81,7 @@ export default function BottomBar({
     event.preventDefault();
 
     if (newUri.trim() === "") {
-      logger("New URI is empty. Not adding bookmark.");
+      log("New URI is empty. Not adding bookmark.");
       return;
     }
 
@@ -97,7 +99,7 @@ export default function BottomBar({
         onBookmarkAdded(newBookmark);
       })
       .catch((error) => {
-        logger(`Could not fetch title or add bookmark: ${String(error)}`);
+        log(`Could not fetch title or add bookmark: ${String(error)}`);
       });
 
     setNewUri("");
@@ -107,14 +109,15 @@ export default function BottomBar({
   const handleQueryChange = (value: string): void => {
     if (!isFocused) return;
 
-    logger(`Search query changed: ${value}`);
+    log(`Search query changed: ${value}`);
     setSearchQuery(value);
+    onQueryChange(value);
   };
 
   const handleNewUriChange = (value: string): void => {
     if (!isFocused) return;
 
-    logger(`New URI changed: ${value}`);
+    log(`New URI changed: ${value}`);
     setNewUri(value);
   };
 
