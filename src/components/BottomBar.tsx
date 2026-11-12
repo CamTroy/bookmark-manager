@@ -8,10 +8,13 @@ import {
 import type { KeyEvent } from "@opentui/core";
 import { logger } from "../debug/logger";
 import { load } from "cheerio";
+import { activeView } from "..";
 
 interface BottomBarProps {
+  isFocused: boolean;
   bookmark: Bookmark | null;
   onBookmarkAdded: (bookmark: Bookmark) => void;
+  onSwitchToBigArea: (newView: any) => void;
 }
 
 function fetchWebsiteTitle(url: string): Promise<string> {
@@ -29,25 +32,25 @@ function fetchWebsiteTitle(url: string): Promise<string> {
 }
 
 export default function BottomBar({
+  isFocused,
   bookmark,
   onBookmarkAdded,
+  onSwitchToBigArea,
 }: BottomBarProps) {
   const [searchMode, setSearchMode] = useState("SEARCH");
   const [searchQuery, setSearchQuery] = useState("");
   const [newUri, setNewUri] = useState("");
 
   // These keys are reserved for other parts of the app
-  const navKeys = [
-    'up',
-    'left',
-    'right',
-    'down',
-    'delete'
-  ]
+  const navKeys = ["up", "left", "right", "down", "delete"];
 
   // Prevent arrow keys and other important keys from doing normal behavior so they can be used in other parts of the app
   const handleNavKeyPress = (event: KeyEvent): void => {
     event.preventDefault();
+
+    if (event.name === "up" && isFocused) {
+      onSwitchToBigArea(activeView.BIG_AREA);
+    }
   };
 
   const handleKeyPressSearch = (event: KeyEvent): void => {
@@ -101,11 +104,15 @@ export default function BottomBar({
   };
 
   const handleQueryChange = (value: string): void => {
+    if (!isFocused) return;
+
     logger(`Search query changed: ${value}`);
     setSearchQuery(value);
   };
 
   const handleNewUriChange = (value: string): void => {
+    if (!isFocused) return;
+
     logger(`New URI changed: ${value}`);
     setNewUri(value);
   };
@@ -125,6 +132,7 @@ export default function BottomBar({
       <box borderColor="white" flexGrow={1} minHeight={5} alignSelf="stretch">
         {searchMode === "SEARCH" ? (
           <input
+            focused={isFocused}
             id="search-box"
             placeholder={
               searchMode === "SEARCH"
@@ -139,6 +147,7 @@ export default function BottomBar({
           />
         ) : (
           <input
+            focused={isFocused}
             id="search-box"
             placeholder={
               searchMode === "SEARCH"

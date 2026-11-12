@@ -4,13 +4,47 @@ import { getBookmarks } from "../filesync";
 import stringWidth from "string-width";
 import { logger } from "../debug/logger";
 import { exec } from "node:child_process";
+import { useKeyboard } from "@opentui/react";
+import { activeView } from "..";
+
+const categoryType = {
+  SEARCHED: "SEARCHED",
+  RECENTS: "RECENTS",
+  NONE: "NONE",
+};
+
+interface BigAreaProps {
+  isFocused: boolean;
+  bookmarkList: Bookmark[];
+  onSwitchToBottomBar: (newView: any) => void;
+}
 
 export default function BigArea({
+  isFocused,
   bookmarkList,
-}: {
-  bookmarkList: Bookmark[];
-}) {
+  onSwitchToBottomBar
+}: BigAreaProps) {
+  useEffect(() => {
+    if (!isFocused) {
+      handleSwitchAwayFromBigArea();
+      return;
+    }
+
+    handleSwitchToBigArea();
+  }), [isFocused]
+  
+  useKeyboard((key) => {
+    if (!isFocused) return;
+
+    if (key.name == 'tab') {
+      key.preventDefault();
+      onSwitchToBottomBar(activeView.BOTTOM_BAR);
+    }
+  })
+  
   const [recentList, setRecentList] = useState<Bookmark[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [selectedCategory, setSelectedCategory] = useState(categoryType.NONE);
   const sanitizeNonLatin = (text: string): string =>
     Array.from(text.normalize("NFC"), (char) =>
       /\p{Script=Latin}/u.test(char) || /^[\x00-\x7F]$/.test(char) ? char : "?",
@@ -50,9 +84,7 @@ export default function BigArea({
 
   const addToRecents = (bookmark: Bookmark): void => {
     setRecentList((prevList) => {
-      const filtered = prevList.filter(
-        (b: Bookmark) => b.id !== bookmark.id,
-      );
+      const filtered = prevList.filter((b: Bookmark) => b.id !== bookmark.id);
       let newArray = [bookmark, ...filtered];
       if (newArray.length > 10) {
         newArray = newArray.slice(0, 10);
@@ -61,6 +93,32 @@ export default function BigArea({
     });
 
     logger(`recents: ${recentList.map((b) => b.name).join(", ")}`);
+  };
+
+  const handleSwitchToBigArea = (): void => {
+    handleChangeCategory(categoryType.SEARCHED);
+  };
+
+  const handleSwitchAwayFromBigArea = (): void => {
+    setSelectedCategory(categoryType.NONE);
+    setSelectedIndex(-1);
+  }
+
+  const handleChangeIndex = (
+    currentIndex: number,
+    newIndex: number,
+    array: any[],
+  ): void => {
+    if (newIndex < 0) return;
+    if (newIndex > array.length - 1) return;
+  };
+
+  const handleChangeCategory = (newCategory: any): void => {
+    if (newCategory == categoryType.RECENTS && recentList.length < 1) return;
+    if (newCategory == categoryType.SEARCHED && bookmarkList.length < 1) return;
+
+    setSelectedCategory(newCategory);
+    setSelectedIndex(0);
   };
 
   return (
@@ -81,7 +139,13 @@ export default function BigArea({
           </text>
           {bookmarkList.map((bookmark: Bookmark, index: number) => (
             <text key={bookmark.id} onMouseUp={(e) => handleClick(e, bookmark)}>
-              <a href={bookmark.uri}>{truncateName(bookmark.name, 40)}</a>
+              {index == selectedIndex && selectedCategory == categoryType.SEARCHED ? (
+                <u>
+                  <a href={bookmark.uri}>{truncateName(bookmark.name, 40)}</a>
+                </u>
+              ) : (
+                <a href={bookmark.uri}>{truncateName(bookmark.name, 40)}</a>
+              )}
             </text>
           ))}
         </scrollbox>
@@ -92,10 +156,15 @@ export default function BigArea({
             recents
             <br />
           </text>
-          {/* Why is there nothing here bruh */}
           {recentList.map((bookmark: Bookmark, index: number) => (
             <text key={bookmark.id} onMouseUp={(e) => handleClick(e, bookmark)}>
-              <a href={bookmark.uri}>{truncateName(bookmark.name, 40)}</a>
+              {index == selectedIndex && selectedCategory == categoryType.RECENTS ? (
+                <u>
+                  <a href={bookmark.uri}>{truncateName(bookmark.name, 40)}</a>
+                </u>
+              ) : (
+                <a href={bookmark.uri}>{truncateName(bookmark.name, 40)}</a>
+              )}
             </text>
           ))}
         </scrollbox>
