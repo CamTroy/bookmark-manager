@@ -12,6 +12,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { getBookmarks, deleteBookmark } from "./filesync";
 import { log, cleanupLogs } from "./debug/logger";
+import ButtonGuide from "./components/ButtonGuide";
 
 mkdirSync(join(homedir(), ".bmanager"), { recursive: true });
 
@@ -80,6 +81,7 @@ function App() {
       {/* <ascii-font id="title" text="bookmark manager" font="shade" /> */}
       <BigArea isFocused={focusedView === activeView.BIG_AREA} bookmarkList={bookmarkList} searchList={searchList} onSwitchToBottomBar={handleSwitchViews} clipboardService={clipboard} deleteBookmark={handleDeleteBookmark} />
       <BottomBar isFocused={focusedView == activeView.BOTTOM_BAR} bookmark={focusedBookmark} onBookmarkAdded={handleBookmarkAdded} onSwitchToBigArea={handleSwitchViews} onQueryChange={handleQueryChange} />
+      <ButtonGuide bottomMode={focusedView == activeView.BOTTOM_BAR} />
       {/* Debug code */}
       {/* <text id="test-debug">current focusedBookmark: {focusedBookmark?.id || 'null'}</text> */}
     </box>
