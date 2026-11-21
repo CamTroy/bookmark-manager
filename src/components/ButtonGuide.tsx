@@ -6,7 +6,8 @@ export default function ButtonGuide({ bottomMode }: { bottomMode: boolean }) {
           flexDirection="row"
           justifyContent="space-between"
           alignItems="space-between"
-          flexWrap="wrap"
+          flexWrap="wrap-reverse"
+          flexGrow={1}
         >
           <box flexDirection="row" paddingX={3}>
             <text bg={"white"} fg={"black"}>
@@ -26,13 +27,20 @@ export default function ButtonGuide({ bottomMode }: { bottomMode: boolean }) {
             </text>
             <text> Browse </text>
           </box>
+          <box flexDirection="row" paddingX={3}>
+            <text bg={"white"} fg={"black"}>
+              ESC
+            </text>
+            <text> Quit </text>
+          </box>
         </box>
       ) : (
         <box
           flexDirection="row"
           justifyContent="space-between"
           alignItems="space-between"
-          flexWrap="wrap"
+          flexWrap="wrap-reverse"
+          flexGrow={1}
         >
           <box flexDirection="row" paddingX={3}>
             <text bg={"white"} fg={"black"}>
@@ -57,6 +65,12 @@ export default function ButtonGuide({ bottomMode }: { bottomMode: boolean }) {
               Arrow keys
             </text>
             <text> Navigate </text>
+          </box>
+          <box flexDirection="row" paddingX={3}>
+            <text bg={"white"} fg={"black"}>
+              ESC
+            </text>
+            <text> Quit </text>
           </box>
         </box>
       )}

@@ -1,7 +1,7 @@
 import { createCliRenderer, TextAttributes,  createClipboard,
 createHostClipboard,
 createRendererClipboardAdapter } from "@opentui/core";
-import { createRoot } from "@opentui/react";
+import { createRoot, useKeyboard } from "@opentui/react";
 import "@opentui/react/runtime-plugin-support";
 import BottomBar from "./components/BottomBar";
 import BigArea from "./components/BigArea";
@@ -47,6 +47,12 @@ function App() {
 
     setSearchList(filteredList);
   }, [searchQuery, bookmarkList]);
+
+  useKeyboard((key) => {
+    if (key.name === "escape") {
+      renderer.destroy()
+    }
+  });
 
   const handleBookmarkAdded = (bookmark: Bookmark) => {
     setBookmarkList(current => [...current, bookmark]);
