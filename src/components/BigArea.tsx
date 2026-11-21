@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Bookmark } from "../models/Bookmark";
 import stringWidth from "string-width";
 import { log } from "../debug/logger";
 import { exec } from "node:child_process";
 import { useKeyboard } from "@opentui/react";
 import { activeView } from "..";
+import { ScrollBox } from "@opentui/core";
 
 const CategoryType = {
   SEARCHED: "SEARCHED",
@@ -32,15 +33,19 @@ export default function BigArea({
   searchList,
   onSwitchToBottomBar,
   clipboardService,
-  deleteBookmark
+  deleteBookmark,
 }: BigAreaProps) {
   const [recentList, setRecentList] = useState<Bookmark[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const prevSelectedIndex = useRef(selectedIndex);
+  const searchScrollRef = useRef<any>(null);
+  const recentScrollRef = useRef<any>(null);
   const [selectedCategory, setSelectedCategory] = useState(CategoryType.NONE);
   const [categoryState, setCategoryState] = useState<CategoryState>({
     name: CategoryType.NONE,
     list: [],
   });
+  const [amountScrollState, setAmountScrollState] = useState(0);
 
   useEffect(() => {
     if (!isFocused) {
@@ -51,6 +56,22 @@ export default function BigArea({
       handleSwitchToBigArea();
     }
   }, [isFocused, selectedCategory]);
+
+  useEffect(() => {
+    if (prevSelectedIndex.current < selectedIndex) {
+      setAmountScrollState(amountScrollState + 1);
+    } else if (prevSelectedIndex.current > selectedIndex) {
+      setAmountScrollState(amountScrollState - 1);
+    }
+    if (amountScrollState > 3) {
+      setAmountScrollState(3);
+      if (selectedCategory == CategoryType.SEARCHED) scrollDownByOne(searchScrollRef.current);
+    } else if (amountScrollState < 0) {
+      setAmountScrollState(0);
+       if (selectedCategory == CategoryType.SEARCHED) scrollUpByOne(searchScrollRef.current);
+    }
+    prevSelectedIndex.current = selectedIndex;
+  }, [selectedIndex, amountScrollState]);
 
   useKeyboard((key) => {
     if (!isFocused) return;
@@ -70,7 +91,7 @@ export default function BigArea({
         break;
       case "delete":
         key.preventDefault();
-        deleteBookmark(categoryState.list[selectedIndex])
+        deleteBookmark(categoryState.list[selectedIndex]);
         break;
       case "left":
         key.preventDefault();
@@ -126,13 +147,13 @@ export default function BigArea({
   };
 
   const copyLink = async (bookmark: Bookmark): Promise<void> => {
-    const uri = bookmark.uri
+    const uri = bookmark.uri;
     try {
       await clipboardService.writeText(uri, {
         destination: "best-available",
       });
       log(`${uri} copied to clipboard!`);
-      addToRecents(bookmark)
+      addToRecents(bookmark);
     } catch (e) {
       log(`Failed to copy link using OpenTUI service: ${e}`);
     }
@@ -178,20 +199,38 @@ export default function BigArea({
     if (newCategory == CategoryType.RECENTS && recentList.length < 1) return;
     if (newCategory == CategoryType.SEARCHED && bookmarkList.length < 1) return;
 
+    setAmountScrollState(0);
     setSelectedCategory(newCategory);
     if (newCategory == CategoryType.RECENTS) {
       setCategoryState({
         name: CategoryType.RECENTS,
         list: recentList,
       });
+      scrollToTop(recentScrollRef.current);
     } else if (newCategory == CategoryType.SEARCHED) {
       setCategoryState({
         name: CategoryType.SEARCHED,
         list: searchList,
       });
+      scrollToTop(searchScrollRef.current);
     }
     setSelectedIndex(0);
   };
+
+  const scrollDownByOne = (scrollBox: any) => {
+    scrollBox.scrollBy(1);
+    log("SCROLLING DOWN");
+  };
+
+  const scrollUpByOne = (scrollBox: any) => {
+    scrollBox.scrollBy(-1);
+    log("SCROLLING UP");
+  };
+
+  const scrollToTop = (scrollBox: any) => {
+    scrollBox.scrollTo(0);
+    log("SCROLLING TO TOP");
+  }
 
   return (
     <box
@@ -203,8 +242,18 @@ export default function BigArea({
       gap={1}
       maxWidth="100%"
     >
-      <box borderColor="white" padding={1} flexDirection="column" flexGrow={1}>
-        <scrollbox padding={1}>
+      <box
+        borderColor="white"
+        padding={1}
+        flexDirection="column"
+        flexGrow={1}
+        maxHeight={"100%"}
+      >
+        <scrollbox
+          padding={1}
+          focused={selectedCategory == CategoryType.SEARCHED}
+          ref={searchScrollRef}
+        >
           <text>
             welcome to your bookmark manager!
             <br />
@@ -223,8 +272,18 @@ export default function BigArea({
           ))}
         </scrollbox>
       </box>
-      <box borderColor="white" padding={1} flexDirection="column" flexGrow={1}>
-        <scrollbox padding={1}>
+      <box
+        borderColor="white"
+        padding={1}
+        flexDirection="column"
+        flexGrow={1}
+        maxHeight={"100%"}
+      >
+        <scrollbox
+          padding={1}
+          focused={selectedCategory == CategoryType.RECENTS}
+          ref={recentScrollRef}
+        >
           <text>
             recents
             <br />
