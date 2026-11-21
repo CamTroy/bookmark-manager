@@ -1,4 +1,5 @@
 # Bookmark Manager
+<img width="875" height="675.5" alt="bookmark manager running in the terminal" src="https://github.com/user-attachments/assets/7aa7f014-f158-4496-9b77-fea90a5c99ae" />
 
 ## Installation
 Download the latest binary from [here](https://github.com/CamTroy/bookmark-manager/releases/) and run it from a terminal
